@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# This work is licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
+#
+# Name : gdflow (stands for Git Deployment Flow)
+# Description : gdflow is a little bash script that allows you to automate deployment using Git and the rsync command only.
+# Version : 1
+#
+# WARNING : Don't forget to chmod +x the script so it can be triggered by Git.
+
+
+# ---------- VARIABLES (what you have to modify) ---------- #
+
+# File containing patterns to exclude from the synchronization
+# See "INCLUDE/EXCLUDE PATTERN RULES" part at "http://rsync.samba.org/ftp/rsync/rsync.html"
+EXCLUDE_FILE=/dev/null # example - will not exclude any file or directory
+
+# Destination directory - where to deploy the files
+DEST_DIR=~/public_html/tests-git-hooks/
+
+# Path to the local git repository that triggered the hook
+GIT_DIR=~/git-repositories/tests-git-hooks-bare.git/
+
+# Path to a (non-existing) temporary directory where files indexed by Git will be created
+TEMP_DIR=~/public_html/tests-git-hooks-temp/
+
+
+# ---------- OPERATIONS (what you can ignore) ---------- #
+
+# Creates the temporary directory
+mkdir $TEMP_DIR
+
+# Creates the files in the temporary directory by doing a hard reset
+git --git-dir=$GIT_DIR --work-tree=$TEMP_DIR reset --hard HEAD
+
+# Updates the content of the destination directory by using synchronization
+rsync -a --delete --exclude-from=$EXCLUDE_FILE --progress -r -v $TEMP_DIR $DEST_DIR
+
+# Removes the temporary directory and its content
+rm -rf $TEMP_DIR
