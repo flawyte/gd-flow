@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# ---------- HEADER (gives you some informations) ---------- #
+# ---------- HEADER (gives you some informations)
 # This work is licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 #
 # Name : gd-flow (stands for Git Deployment Flow)
@@ -16,10 +16,10 @@
 # WARNING : Don't forget to chmod +x the script so it can be triggered by Git.
 
 
-# ---------- VARIABLES (what you have to modify) ---------- #
+# ---------- VARIABLES (what you have to modify)
 
 DEST_DIR=$2
-EXCLUDE_FILE=/dev/null
+EXCLUDE_FILE=/dev/null # will not exclude any file or directory
 GIT_DIR=$1
 TEMP_DIR="$DEST_DIR-temp"
 
@@ -29,7 +29,7 @@ then
 fi
 
 
-# ---------- OPERATIONS (what you can ignore) ---------- #
+# ---------- OPERATIONS (what you can ignore)
 
 # Creates the temporary directory
 mkdir $TEMP_DIR
