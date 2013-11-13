@@ -4,6 +4,7 @@
 #
 # Name : gd-flow (stands for Git Deployment Flow)
 # Description : gdflow is a little bash script that allows you to automate deployment using Git and the rsync command only.
+# Project page : https://github.com/inspirat/gd-flow
 # Version : 2
 # Parameters :
 #       * $1 : Path to the local git repository that triggered the hook
