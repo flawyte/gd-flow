@@ -10,7 +10,7 @@
 # Version : 1.1
 # Parameters :
 #       * $1 : Path to the local git repository that triggered the hook
-#       * $2 : Destination directory - where to deploy the files
+#       * $2 : Destination directory - where to deploy the files - without trailing slash
 #       * $3 [Optional] : File containing patterns to exclude from the synchronization - See the "INCLUDE/EXCLUDE PATTERN RULES" part at "http://rsync.samba.org/ftp/rsync/rsync.html"
 #
 # WARNING : Don't forget to chmod +x the script so it can be triggered by Git.
@@ -38,7 +38,7 @@ mkdir $TEMP_DIR
 git --git-dir=$GIT_DIR --work-tree=$TEMP_DIR reset --hard HEAD
 
 # Updates the content of the destination directory by using synchronization
-rsync -a --delete --exclude-from=$EXCLUDE_FILE --progress -r -v $TEMP_DIR $DEST_DIR
+rsync -a --delete --exclude-from=$EXCLUDE_FILE --progress -r -v "$TEMP_DIR/" "$DEST_DIR/"
 
 # Removes the temporary directory and its content
 rm -rf $TEMP_DIR
