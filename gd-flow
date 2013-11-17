@@ -15,6 +15,8 @@
 #
 # WARNING : Don't forget to chmod +x the script so it can be triggered by Git.
 
+read oldvalue newvalue refname # See "https://www.kernel.org/pub/software/scm/git/docs/githooks.html#post-receive" for more informations
+
 
 # ---------- VARIABLES (what you have to modify)
 
@@ -35,7 +37,7 @@ fi
 mkdir $TEMP_DIR
 
 # Creates the files in the temporary directory by doing a hard reset
-git --git-dir=$GIT_DIR --work-tree=$TEMP_DIR reset --hard HEAD
+git --git-dir=$GIT_DIR --work-tree=$TEMP_DIR reset --hard $refname
 
 # Updates the content of the destination directory by using synchronization
 rsync -a --delete --exclude-from=$EXCLUDE_FILE --progress -r -v "$TEMP_DIR/" "$DEST_DIR/"
