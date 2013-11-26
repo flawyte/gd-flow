@@ -33,6 +33,20 @@ fi
 
 # ---------- OPERATIONS (what you can ignore)
 
+if [ ! -d "$DEST_DIR" ] ;
+then
+        echo "[gd-flow] The destination directory doesn't exists : $DEST_DIR"
+        exit 1
+elif [[ $EXCLUDE_FILE != /dev/null && ! -f $EXCLUDE_FILE ]] ;
+then
+        echo "[gd-flow] The exclude file doesn't exists : $EXCLUDE_FILE"
+        exit 1
+elif [ ! -d "$GIT_DIR" ] ;
+then
+        echo "[gd-flow] The Git directory doesn't exists : $GIT_DIR"
+        exit 1
+fi
+
 # Creates the temporary directory
 mkdir $TEMP_DIR
 
