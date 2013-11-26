@@ -7,11 +7,12 @@
 # Name : gd-flow (stands for Git Deployment Flow)
 # Description : gdflow is a little bash script that allows you to automate deployment using Git and the rsync command only.
 # Project page : https://github.com/inspirat/gd-flow
-# Version : 1.1
-# Parameters :
-#       * $1 : Path to the local git repository that triggered the hook
-#       * $2 : Destination directory - where to deploy the files - without trailing slash
-#       * $3 [Optional] : File containing patterns to exclude from the synchronization - See the "INCLUDE/EXCLUDE PATTERN RULES" part at "http://rsync.samba.org/ftp/rsync/rsync.html"
+# Version : 2
+# Options :
+#       *  -d   : Destination directory - where to deploy the files - without trailing slash
+#       *  -e   : File containing patterns to exclude from the synchronization - See the "INCLUDE/EXCLUDE PATTERN RULES" part at "http://rsync.samba.org/ftp/rsync/rsync.html"
+#       *  -g   : Path to the local git repository that triggered the hook
+#       * [-v]  : Whether you want verbose output during synchronization or not
 #
 # WARNING : Don't forget to chmod +x the script so it can be triggered by Git.
 
