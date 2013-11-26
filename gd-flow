@@ -24,10 +24,11 @@ dest_dir=/dev/null
 exclude_file=/dev/null # will not exclude any file or directory
 git_dir=/dev/null
 temp_dir=/dev/null
+verbose=0
 
 # -- PARSE
 
-while getopts ":d:e:g:" opt
+while getopts ":d:e:g:v" opt
 do
         if [[ $OPTARG == -* ]] ;
         then
@@ -45,6 +46,9 @@ do
                 ;;
                 g)
                         git_dir=$OPTARG
+                ;;
+                v)
+                        (( verbose = 1 ))
                 ;;
                 :)
                         echo "[gd-flow] No value given for option '$OPTARG'"
@@ -79,7 +83,12 @@ mkdir $temp_dir
 git --git-dir=$git_dir --work-tree=$temp_dir reset --hard $refname
 
 # Updates the content of the destination directory by using synchronization
-rsync -a --delete --exclude-from=$exclude_file --progress -r -v "$temp_dir/" "$dest_dir/"
+if [ $verbose == 0 ] ;
+then
+        rsync -a --delete --exclude-from=$exclude_file -r "$temp_dir/" "$dest_dir/"
+else
+        rsync -a --delete --exclude-from=$exclude_file -r -v "$temp_dir/" "$dest_dir/"
+fi
 
 # Removes the temporary directory and its content
 rm -rf $temp_dir
