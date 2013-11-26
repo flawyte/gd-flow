@@ -92,3 +92,6 @@ fi
 
 # Removes the temporary directory and its content
 rm -rf $temp_dir
+
+# Everything went fine
+echo "[gd-flow] '$refname' has been correctly deployed to '$dest_dir'"
