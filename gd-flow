@@ -20,41 +20,41 @@ read oldvalue newvalue refname # See "https://www.kernel.org/pub/software/scm/gi
 
 # ---------- VARIABLES (what you have to modify)
 
-DEST_DIR=$2
-EXCLUDE_FILE=/dev/null # will not exclude any file or directory
-GIT_DIR=$1
-TEMP_DIR="$DEST_DIR-temp"
+dest_dir=$2
+exclude_file=/dev/null # will not exclude any file or directory
+git_dir=$1
+temp_dir="$dest_dir-temp"
 
 if [ $# == 3 ] ;
 then
-        EXCLUDE_FILE=$3
+        exclude_file=$3
 fi
 
 
 # ---------- OPERATIONS (what you can ignore)
 
-if [ ! -d "$DEST_DIR" ] ;
+if [ ! -d "$dest_dir" ] ;
 then
-        echo "[gd-flow] The destination directory doesn't exists : $DEST_DIR"
+        echo "[gd-flow] The destination directory doesn't exists : $dest_dir"
         exit 1
-elif [[ $EXCLUDE_FILE != /dev/null && ! -f $EXCLUDE_FILE ]] ;
+elif [[ $exclude_file != /dev/null && ! -f $exclude_file ]] ;
 then
-        echo "[gd-flow] The exclude file doesn't exists : $EXCLUDE_FILE"
+        echo "[gd-flow] The exclude file doesn't exists : $exclude_file"
         exit 1
-elif [ ! -d "$GIT_DIR" ] ;
+elif [ ! -d "$git_dir" ] ;
 then
-        echo "[gd-flow] The Git directory doesn't exists : $GIT_DIR"
+        echo "[gd-flow] The Git directory doesn't exists : $git_dir"
         exit 1
 fi
 
 # Creates the temporary directory
-mkdir $TEMP_DIR
+mkdir $temp_dir
 
 # Creates the files in the temporary directory by doing a hard reset
-git --git-dir=$GIT_DIR --work-tree=$TEMP_DIR reset --hard $refname
+git --git-dir=$git_dir --work-tree=$temp_dir reset --hard $refname
 
 # Updates the content of the destination directory by using synchronization
-rsync -a --delete --exclude-from=$EXCLUDE_FILE --progress -r -v "$TEMP_DIR/" "$DEST_DIR/"
+rsync -a --delete --exclude-from=$exclude_file --progress -r -v "$temp_dir/" "$dest_dir/"
 
 # Removes the temporary directory and its content
-rm -rf $TEMP_DIR
+rm -rf $temp_dir
