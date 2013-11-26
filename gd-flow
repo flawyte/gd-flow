@@ -20,18 +20,40 @@ read oldvalue newvalue refname # See "https://www.kernel.org/pub/software/scm/gi
 
 # ---------- VARIABLES (what you have to modify)
 
-dest_dir=$2
+dest_dir=/dev/null
 exclude_file=/dev/null # will not exclude any file or directory
-git_dir=$1
-temp_dir="$dest_dir-temp"
+git_dir=/dev/null
+temp_dir=/dev/null
 
-if [ $# == 3 ] ;
-then
-        exclude_file=$3
-fi
+# -- PARSE
 
+while getopts ":d:e:g:" opt
+do
+        if [[ $OPTARG == -* ]] ;
+        then
+                echo "[gd-flow] '$OPTARG' is not a valid value for option '$opt'"
+                exit 1
+        fi
 
-# ---------- OPERATIONS (what you can ignore)
+        case $opt in
+                d)
+                        dest_dir=$OPTARG
+                        temp_dir="$dest_dir-temp"
+                ;;
+                e)
+                        exclude_file=$OPTARG
+                ;;
+                g)
+                        git_dir=$OPTARG
+                ;;
+                :)
+                        echo "[gd-flow] No value given for option '$OPTARG'"
+                        exit 1
+                ;;
+        esac
+done
+
+# -- CHECK
 
 if [ ! -d "$dest_dir" ] ;
 then
@@ -46,6 +68,9 @@ then
         echo "[gd-flow] The Git directory doesn't exists : $git_dir"
         exit 1
 fi
+
+
+# ---------- OPERATIONS (what you can ignore)
 
 # Creates the temporary directory
 mkdir $temp_dir
