@@ -1,0 +1,34 @@
+#!/bin/bash
+# Description : gd-flow unit testing file
+
+# ----- VARIABLES
+
+oldvalue=123456
+newvalue=456789
+refname="refs/heads/master"
+target="gd-flow"
+
+# ----- FUNCTIONS
+
+assert() {
+        if [ $1 == $2 ] ;
+        then
+                echo "PASSED"
+        else
+                echo "FAILED"
+        fi
+}
+
+# ----- CHECK
+
+if [[ $# == 1 && -f "$1" ]] ;
+then
+        target=$1
+fi
+
+# ----- UNITS TESTING
+
+str=$( echo $oldvalue $newvalue $refname | bash $target )
+result=$?
+echo $( assert $result 0 )
+echo "($result) $str"
