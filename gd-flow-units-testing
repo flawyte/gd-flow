@@ -28,7 +28,26 @@ fi
 
 # ----- UNITS TESTING
 
-str=$( echo $oldvalue $newvalue $refname | bash $target )
-result=$?
-echo $( assert $result 0 )
-echo "($result) $str"
+# No deploy / git directory & no exclude file
+result_str=$( echo $oldvalue $newvalue $refname | bash $target )
+result_code=$?
+assert_str=$( assert $result_code 1 )
+echo "$assert_str ($result_code) $result_str"
+
+# No git directory & no exclude file
+result_str=$( echo $oldvalue $newvalue $refname | bash $target -d "units-testing/deploy-directory" )
+result_code=$?
+assert_str=$( assert $result_code 1 )
+echo "$assert_str ($result_code) $result_str"
+
+# Wrong git directory & no exclude file
+result_str=$( echo $oldvalue $newvalue $refname | bash $target -d "units-testing/deploy-directory" -g "units-testing/git-directory" )
+result_code=$?
+assert_str=$( assert $result_code 1 )
+echo "$assert_str ($result_code) $result_str"
+
+# Wrong exclude file
+result_str=$( echo $oldvalue $newvalue $refname | bash $target -d "units-testing/deploy-directory" -g ".git" -e fake )
+result_code=$?
+assert_str=$( assert $result_code 1 )
+echo "$assert_str ($result_code) $result_str"
