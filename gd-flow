@@ -1,8 +1,6 @@
 #!/bin/bash
 
-
-# ---------- HEADER (gives you some informations)
-# This work is licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
+# >>> HEADER (gives you some informations)
 #
 # Name : gd-flow (stands for Git Deployment Flow)
 # Description : gdflow is a little bash script that allows you to automate deployment using Git and the rsync command only.
@@ -17,7 +15,6 @@
 # WARNING : Don't forget to chmod +x the script so it can be triggered by Git.
 
 read oldvalue newvalue refname # See "https://www.kernel.org/pub/software/scm/git/docs/githooks.html#post-receive" for more informations
-
 
 # ---------- VARIABLES (what you have to modify)
 
