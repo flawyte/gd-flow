@@ -1,0 +1,7 @@
+#!/bin/bash
+
+gd_flow=path/to/gd-flow
+dep_dir=path/to/dep_dir
+git_dir=path/to/git_dir
+
+bash $gd_flow -d $dep_dir -g $git_dir
