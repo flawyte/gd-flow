@@ -7,11 +7,11 @@
 # Project page : https://github.com/flawyte/gd-flow
 # Version : 2
 # Options :
-#   *  -d   : Destination directory - where to deploy the files - without trailing slash
+#   *  -d   : Deployment (destination) directory - where to deploy the files - (without trailing slash)
 #   * [-e]  : File containing patterns to exclude from the synchronization
 #             See the "INCLUDE/EXCLUDE PATTERN RULES" part at "http://rsync.samba.org/ftp/rsync/rsync.html"
 #             (default : will not exclude any file or directory)
-#   *  -g   : Path to the local git repository that triggered the hook
+#   *  -g   : Path to the local git repository that triggered the hook - (without trailing slash)
 #   * [-v]  : Whether you want verbose output during synchronization or not
 #             (default : will only print the minimum of informations)
 #
@@ -21,27 +21,27 @@ read oldvalue newvalue refname # See "https://www.kernel.org/pub/software/scm/gi
 
 ## VARIABLES (what you have to change, either by hard coding the values or by calling the script with the appropriated options)
 
-deploy_dir=/dev/null    # -d
-exclude_file=/dev/null  # -e
-git_dir=/dev/null       # -g
-temp_dir=/dev/null
+dep_dir=/dev/null   # -d
+exc_fil=/dev/null   # -e
+git_dir=/dev/null   # -g
+tmp_dir=/dev/null
 verbose=0               # -v
 
 ## PARSE CLI Options
 
-while getopts ":d:e:g:v" opt do
+while getopts ":d:e:g:v" opt ; do
   if [[ $OPTARG == -* ]] ; then
-    echo "[gd-flow] '$OPTARG' is not a valid value for option '$opt'"
+    echo "[gd-flow] '$OPTARG' is not a valid argument for option '$opt'"
     exit 1
   fi
 
   case $opt in
     d)
-      deploy_dir=$OPTARG
-      temp_dir="$deploy_dir-temp"
+      dep_dir=$OPTARG
+      tmp_dir="$dep_dir-temp"
     ;;
     e)
-      exclude_file=$OPTARG
+      exc_fil=$OPTARG
     ;;
     g)
       git_dir=$OPTARG
@@ -56,13 +56,21 @@ while getopts ":d:e:g:v" opt do
   esac
 done
 
+echo "[gd-flow] old_val = $oldvalue"
+echo "[gd-flow] new_val = $newvalue"
+echo "[gd-flow] refname = $refname"
+echo "[gd-flow] dep_dir = $dep_dir"
+echo "[gd-flow] exc_fil = $exc_fil"
+echo "[gd-flow] git_dir = $git_dir"
+echo "[gd-flow] verbose = $verbose"
+
 ## CHECK CLI Arguments
 
-if [ ! -d "$deploy_dir" ] ; then
-  mkdir -p "$deploy_dir"
-  echo "[gd-flow] '$deploy_dir' has been created"
-elif [[ $exclude_file != /dev/null && ! -f $exclude_file ]] ; then
-  echo "[gd-flow] The exclude file doesn't exists : '$exclude_file'"
+if [[ ! -d "$dep_dir" && "$dep_dir" != /dev/null ]] ; then
+  mkdir -p "$dep_dir"
+  echo "[gd-flow] '$dep_dir' has been created"
+elif [[ $exc_fil != /dev/null && ! -f $exc_fil ]] ; then
+  echo "[gd-flow] The exclude file doesn't exists : '$exc_fil'"
   exit 1
 elif [ ! -d "$git_dir" ] ; then
   echo "[gd-flow] The Git directory doesn't exists : '$git_dir'"
@@ -72,20 +80,22 @@ fi
 ## DEPLOY the files
 
 # Create temp dir
-mkdir $temp_dir
+mkdir $tmp_dir
 
 # Create the website files in the temp dir by doing a '--hard' reset
-git reset --hard --git-dir=$git_dir --work-tree=$temp_dir $refname
+git --git-dir=$git_dir --work-tree=$tmp_dir reset --hard $newvalue
 
 # Updates the content of the destination directory by using synchronization
-if [ $verbose == 0 ] ; then
-  rsync -a --delete --exclude-from=$exclude_file -r "$temp_dir/" "$deploy_dir/"
+echo "[gd-flow] Synchronization... starting"
+if [ $verbose == 1 ] ; then
+  rsync -a --delete --exclude-from=$exc_fil -r "$tmp_dir/" "$dep_dir/" -v
 else
-  rsync -a --delete --exclude-from=$exclude_file -r "$temp_dir/" "$deploy_dir/" -v
+  rsync -a --delete --exclude-from=$exc_fil -r "$tmp_dir/" "$dep_dir/"
 fi
+echo "[gd-flow] Synchronization... finished"
 
 # Removes the temporary directory and its content
-rm -rf $temp_dir
+rm -rf $tmp_dir
 
 # Everything went fine
-echo "[gd-flow] '$refname' has been correctly deployed to '$deploy_dir'"
+echo "[gd-flow] '$refname' has been correctly deployed to '$dep_dir'"
