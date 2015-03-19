@@ -1,0 +1,11 @@
+#!/bin/bash
+
+hk_path=`pwd`/$0 # hook's full path (path + name)
+srv_dir=`cd ${hk_path:0:$(( ${#hk_path} - 12 -1 ))}/../../ && pwd` # Path to 'gd-flow/tests/server/'
+
+gd_flow=`cd $srv_dir/../../ && pwd`/gd-flow # Path to 'gd-flow/gd-flow'
+dep_dir=$srv_dir/dep_dir                    # Path to 'gd-flow/tests/server/dep_dir/'
+exc_fil=$srv_dir/exc_fil                    # Path to 'gd-flow/tests/server/exc_fil'
+git_dir=$srv_dir/git_dir                    # Path to 'gd-flow/tests/server/git_dir/'
+
+bash $gd_flow -d $dep_dir -e $exc_fil -g $git_dir -v
