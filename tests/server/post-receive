@@ -7,5 +7,7 @@ gd_flow=`cd $srv_dir/../../ && pwd`/gd-flow # Path to 'gd-flow/gd-flow'
 dep_dir=$srv_dir/dep_dir                    # Path to 'gd-flow/tests/server/dep_dir/'
 exc_fil=$srv_dir/exc_fil                    # Path to 'gd-flow/tests/server/exc_fil'
 git_dir=$srv_dir/git_dir                    # Path to 'gd-flow/tests/server/git_dir/'
+subdirs=$srv_dir/subdirs                    # Path to 'gd-flow/tests/server/subdirs' (2)
 
-bash $gd_flow -d $dep_dir -e $exc_fil -g $git_dir -v
+bash $gd_flow -d $dep_dir -e $exc_fil -g $git_dir -s "dir1" -v
+# bash $gd_flow -d $dep_dir -e $exc_fil -g $git_dir -s $subdirs -v # (2)
