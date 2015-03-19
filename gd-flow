@@ -1,95 +1,91 @@
 #!/bin/bash
 
-# >>> HEADER (gives you some informations)
+## HEADER (informations about the script)
 #
 # Name : gd-flow (stands for Git Deployment Flow)
-# Description : gdflow is a little bash script that allows you to automate deployment using Git and the rsync command only.
-# Project page : https://github.com/inspirat/gd-flow
+# Description : gd-flow is a little bash script that allows you to automate deployment using Git and the rsync command only.
+# Project page : https://github.com/flawyte/gd-flow
 # Version : 2
 # Options :
-#       *  -d   : Destination directory - where to deploy the files - without trailing slash
-#       *  -e   : File containing patterns to exclude from the synchronization - See the "INCLUDE/EXCLUDE PATTERN RULES" part at "http://rsync.samba.org/ftp/rsync/rsync.html"
-#       *  -g   : Path to the local git repository that triggered the hook
-#       * [-v]  : Whether you want verbose output during synchronization or not
+#   *  -d   : Destination directory - where to deploy the files - without trailing slash
+#   * [-e]  : File containing patterns to exclude from the synchronization
+#             See the "INCLUDE/EXCLUDE PATTERN RULES" part at "http://rsync.samba.org/ftp/rsync/rsync.html"
+#             (default : will not exclude any file or directory)
+#   *  -g   : Path to the local git repository that triggered the hook
+#   * [-v]  : Whether you want verbose output during synchronization or not
+#             (default : will only print the minimum of informations)
 #
 # WARNING : Don't forget to chmod +x the script so it can be triggered by Git.
 
 read oldvalue newvalue refname # See "https://www.kernel.org/pub/software/scm/git/docs/githooks.html#post-receive" for more informations
 
-# ---------- VARIABLES (what you have to modify)
+## VARIABLES (what you have to change, either by hard coding the values or by calling the script with the appropriated options)
 
-dest_dir=/dev/null
-exclude_file=/dev/null # will not exclude any file or directory
-git_dir=/dev/null
+deploy_dir=/dev/null    # -d
+exclude_file=/dev/null  # -e
+git_dir=/dev/null       # -g
 temp_dir=/dev/null
-verbose=0
+verbose=0               # -v
 
-# -- PARSE
+## PARSE CLI Options
 
-while getopts ":d:e:g:v" opt
-do
-        if [[ $OPTARG == -* ]] ;
-        then
-                echo "[gd-flow] '$OPTARG' is not a valid value for option '$opt'"
-                exit 1
-        fi
+while getopts ":d:e:g:v" opt do
+  if [[ $OPTARG == -* ]] ; then
+    echo "[gd-flow] '$OPTARG' is not a valid value for option '$opt'"
+    exit 1
+  fi
 
-        case $opt in
-                d)
-                        dest_dir=$OPTARG
-                        temp_dir="$dest_dir-temp"
-                ;;
-                e)
-                        exclude_file=$OPTARG
-                ;;
-                g)
-                        git_dir=$OPTARG
-                ;;
-                v)
-                        (( verbose = 1 ))
-                ;;
-                :)
-                        echo "[gd-flow] No value given for option '$OPTARG'"
-                        exit 1
-                ;;
-        esac
+  case $opt in
+    d)
+      deploy_dir=$OPTARG
+      temp_dir="$deploy_dir-temp"
+    ;;
+    e)
+      exclude_file=$OPTARG
+    ;;
+    g)
+      git_dir=$OPTARG
+    ;;
+    v)
+      (( verbose = 1 ))
+    ;;
+    :)
+      echo "[gd-flow] No value given for option '$OPTARG'"
+      exit 1
+    ;;
+  esac
 done
 
-# -- CHECK
+## CHECK CLI Arguments
 
-if [ ! -d "$dest_dir" ] ;
-then
-        echo "[gd-flow] The destination directory doesn't exists : $dest_dir"
-        exit 1
-elif [[ $exclude_file != /dev/null && ! -f $exclude_file ]] ;
-then
-        echo "[gd-flow] The exclude file doesn't exists : $exclude_file"
-        exit 1
-elif [ ! -d "$git_dir" ] ;
-then
-        echo "[gd-flow] The Git directory doesn't exists : $git_dir"
-        exit 1
+if [ ! -d "$deploy_dir" ] ; then
+  echo "[gd-flow] The destination directory doesn't exists : $deploy_dir"
+  exit 1
+elif [[ $exclude_file != /dev/null && ! -f $exclude_file ]] ; then
+  echo "[gd-flow] The exclude file doesn't exists : $exclude_file"
+  exit 1
+elif [ ! -d "$git_dir" ] ; then
+  echo "[gd-flow] The Git directory doesn't exists : $git_dir"
+  exit 1
 fi
 
+## DEPLOY the files
 
-# ---------- OPERATIONS (what you can ignore)
-
-# Creates the temporary directory
+# Create temp dir
 mkdir $temp_dir
 
-# Creates the files in the temporary directory by doing a hard reset
-git --git-dir=$git_dir --work-tree=$temp_dir reset --hard $refname
+# Create the website files in the temp dir by doing a '--hard' reset
+git reset --hard --git-dir=$git_dir --work-tree=$temp_dir $refname
 
 # Updates the content of the destination directory by using synchronization
-if [ $verbose == 0 ] ;
-then
-        rsync -a --delete --exclude-from=$exclude_file -r "$temp_dir/" "$dest_dir/"
+if [ $verbose == 0 ] ; then
+  rsync -a --delete --exclude-from=$exclude_file -r "$temp_dir/" "$deploy_dir/"
 else
-        rsync -a --delete --exclude-from=$exclude_file -r -v "$temp_dir/" "$dest_dir/"
+  rsync -a --delete --exclude-from=$exclude_file -r "$temp_dir/" "$deploy_dir/" -v
 fi
 
 # Removes the temporary directory and its content
 rm -rf $temp_dir
 
 # Everything went fine
-echo "[gd-flow] '$refname' has been correctly deployed to '$dest_dir'"
+echo "[gd-flow] '$refname' has been correctly deployed to '$deploy_dir'"
