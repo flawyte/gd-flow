@@ -59,13 +59,13 @@ done
 ## CHECK CLI Arguments
 
 if [ ! -d "$deploy_dir" ] ; then
-  echo "[gd-flow] The destination directory doesn't exists : $deploy_dir"
-  exit 1
+  mkdir -p "$deploy_dir"
+  echo "[gd-flow] '$deploy_dir' has been created"
 elif [[ $exclude_file != /dev/null && ! -f $exclude_file ]] ; then
-  echo "[gd-flow] The exclude file doesn't exists : $exclude_file"
+  echo "[gd-flow] The exclude file doesn't exists : '$exclude_file'"
   exit 1
 elif [ ! -d "$git_dir" ] ; then
-  echo "[gd-flow] The Git directory doesn't exists : $git_dir"
+  echo "[gd-flow] The Git directory doesn't exists : '$git_dir'"
   exit 1
 fi
 
