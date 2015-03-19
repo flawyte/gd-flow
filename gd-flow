@@ -12,6 +12,9 @@
 #             See the "INCLUDE/EXCLUDE PATTERN RULES" part at "http://rsync.samba.org/ftp/rsync/rsync.html"
 #             (default : will not exclude any file or directory)
 #   *  -g   : Path to the local git repository that triggered the hook - (without trailing slash)
+#   *  -s   : - Repository's subdirectory to copy content from (without trailing slash)
+#             OR
+#             - Path to a file containing a list of repository's subdirectories to copy content from (without trailing slashs)
 #   * [-v]  : Whether you want verbose output during synchronization or not
 #             (default : will only print the minimum of informations)
 #
@@ -21,15 +24,16 @@ read oldvalue newvalue refname # See "https://www.kernel.org/pub/software/scm/gi
 
 ## VARIABLES (what you have to change, either by hard coding the values or by calling the script with the appropriated options)
 
-dep_dir=/dev/null   # -d
-exc_fil=/dev/null   # -e
-git_dir=/dev/null   # -g
-tmp_dir=/dev/null
+dep_dir=null   # -d
+exc_fil=null   # -e
+git_dir=null   # -g
+subdirs=null   # -s
+tmp_dir=null
 verbose=0               # -v
 
 ## PARSE CLI Options
 
-while getopts ":d:e:g:v" opt ; do
+while getopts ":d:e:g:s:v" opt ; do
   if [[ $OPTARG == -* ]] ; then
     echo "[gd-flow] '$OPTARG' is not a valid argument for option '$opt'"
     exit 1
@@ -38,13 +42,16 @@ while getopts ":d:e:g:v" opt ; do
   case $opt in
     d)
       dep_dir=$OPTARG
-      tmp_dir="$dep_dir-temp"
+      tmp_dir="$dep_dir-tmp"
     ;;
     e)
       exc_fil=$OPTARG
     ;;
     g)
       git_dir=$OPTARG
+    ;;
+    s)
+      subdirs=$OPTARG
     ;;
     v)
       (( verbose = 1 ))
@@ -62,40 +69,84 @@ echo "[gd-flow] refname = $refname"
 echo "[gd-flow] dep_dir = $dep_dir"
 echo "[gd-flow] exc_fil = $exc_fil"
 echo "[gd-flow] git_dir = $git_dir"
+echo "[gd-flow] subdirs = $subdirs"
 echo "[gd-flow] verbose = $verbose"
 
 ## CHECK CLI Arguments
 
-if [[ ! -d "$dep_dir" && "$dep_dir" != /dev/null ]] ; then
-  mkdir -p "$dep_dir"
-  echo "[gd-flow] '$dep_dir' has been created"
-elif [[ $exc_fil != /dev/null && ! -f $exc_fil ]] ; then
-  echo "[gd-flow] The exclude file doesn't exists : '$exc_fil'"
+# dep_dir
+if [ $dep_dir == null ] ; then
+  echo "[gd-flow] You have to specify a deployment directory (using option '-d')"
   exit 1
-elif [ ! -d "$git_dir" ] ; then
-  echo "[gd-flow] The Git directory doesn't exists : '$git_dir'"
+fi
+
+# exc_fil
+if [[ $exc_fil != null && ! -f $exc_fil ]] ; then
+  echo "[gd-flow] -e : '$exc_fil' is not a file"
   exit 1
+fi
+
+# git_dir
+if [ $git_dir == null ] ; then
+  echo "[gd-flow] You have to specify a git repository (using option '-g')"
+  exit 1
+elif [ ! -d $git_dir ] ; then
+  echo "[gd-flow] -g : '$git_dir' is not a directory"
+  exit 1
+fi
+
+## BUILD the command that wil be executed
+
+cmd="rsync -a"
+
+if [ $exc_fil != null ] ; then
+  cmd="$cmd --exclude-from=$exc_fil"
+fi
+if [ $verbose == 1 ] ; then
+  cmd="$cmd -v"
 fi
 
 ## DEPLOY the files
 
+# Create deployment dir
+if [ ! -d "$dep_dir" ] ; then
+  mkdir -p "$dep_dir"
+  echo "[gd-flow] '$dep_dir' has been created"
+else
+  rm -rf $dep_dir/*
+fi
+
 # Create temp dir
 mkdir $tmp_dir
+echo "[gd-flow] '$tmp_dir' has been created"
 
 # Create the website files in the temp dir by doing a '--hard' reset
 git --git-dir=$git_dir --work-tree=$tmp_dir reset --hard $newvalue
 
 # Updates the content of the destination directory by using synchronization
-echo "[gd-flow] Synchronization... starting"
-if [ $verbose == 1 ] ; then
-  rsync -a --delete --exclude-from=$exc_fil -r "$tmp_dir/" "$dep_dir/" -v
+echo "[gd-flow] Starting synchronization..."
+
+# No subdirectories specified => add everything from the repo to the deployment dir
+if [ $subdirs == null ] ; then
+  echo "NO SUB"
+  $($cmd -r $tmp_dir/ $dep_dir | tee /dev/tty)
+# File => add each specified repo's subdirectory's content to the deployment dir
+elif [ -f $subdirs ] ; then
+  echo "SUB VIA FILE"
+  cat $subdirs | while read line ; do
+    $($cmd -r $tmp_dir/$line/ $dep_dir | tee /dev/tty)
+  done
+# String => add only this subdirectory's content to the deployment dir
 else
-  rsync -a --delete --exclude-from=$exc_fil -r "$tmp_dir/" "$dep_dir/"
+  echo "SUB VIA STR"
+  $($cmd -r $tmp_dir/$subdirs/ $dep_dir | tee /dev/tty)
 fi
-echo "[gd-flow] Synchronization... finished"
+
+echo "[gd-flow] ...synchronization finished"
 
 # Removes the temporary directory and its content
 rm -rf $tmp_dir
+echo "[gd-flow] '$tmp_dir' has been removed"
 
 # Everything went fine
-echo "[gd-flow] '$refname' has been correctly deployed to '$dep_dir'"
+echo "[gd-flow] '$refname' has been successfully deployed to '$dep_dir'"
