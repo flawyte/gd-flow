@@ -112,8 +112,6 @@ fi
 if [ ! -d "$dep_dir" ] ; then
   mkdir -p "$dep_dir"
   echo "[gd-flow] '$dep_dir' has been created"
-else
-  rm -rf $dep_dir/*
 fi
 
 # Create temp dir
@@ -126,27 +124,33 @@ git --git-dir=$git_dir --work-tree=$tmp_dir reset --hard $newvalue
 # Updates the content of the destination directory by using synchronization
 echo "[gd-flow] Starting synchronization..."
 
-# No subdirectories specified => add everything from the repo to the deployment dir
+mkdir $tmp_dir-2
+echo "[gd-flow] '$tmp_dir-2' has been created"
+
+# No subdirectories specified => add everything from the repo to the second temp dir
 if [ $subdirs == null ] ; then
-  echo "NO SUB"
-  $($cmd -r $tmp_dir/ $dep_dir | tee /dev/tty)
-# File => add each specified repo's subdirectory's content to the deployment dir
+  $($cmd -r $tmp_dir/ $tmp_dir-2 | tee /dev/tty)
+# File => add each specified repo's subdirectory's content to the second temp dir
 elif [ -f $subdirs ] ; then
-  echo "SUB VIA FILE"
   cat $subdirs | while read line ; do
-    $($cmd -r $tmp_dir/$line/ $dep_dir | tee /dev/tty)
+    $($cmd -r $tmp_dir/$line/ $tmp_dir-2 | tee /dev/tty)
   done
 # String => add only this subdirectory's content to the deployment dir
 else
-  echo "SUB VIA STR"
-  $($cmd -r $tmp_dir/$subdirs/ $dep_dir | tee /dev/tty)
+  $($cmd -r $tmp_dir/$subdirs/ $tmp_dir-2 | tee /dev/tty)
 fi
+
+echo "[gd-flow] ...step 1 finished"
+$($cmd --delete -r $tmp_dir-2/ $dep_dir | tee /dev/tty)
+echo "[gd-flow] ...step 2 finished"
 
 echo "[gd-flow] ...synchronization finished"
 
-# Removes the temporary directory and its content
+# Removes the temp directories and their content
 rm -rf $tmp_dir
 echo "[gd-flow] '$tmp_dir' has been removed"
+rm -rf $tmp_dir-2
+echo "[gd-flow] '$tmp_dir-2' has been removed"
 
 # Everything went fine
 echo "[gd-flow] '$refname' has been successfully deployed to '$dep_dir'"
